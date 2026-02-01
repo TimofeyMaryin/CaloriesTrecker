@@ -18,6 +18,7 @@ import SelectionCard from '../components/SelectionCard';
 import HorizontalRulerPicker from '../components/HorizontalRulerPicker';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useProfileStore } from '../store/profileStore';
+import { usePremiumStore } from '../store/premiumStore';
 import { showPaywall, PLACEMENT_IDS } from '../services/adapty';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -77,6 +78,9 @@ const ProfileSettings = () => {
     setGoalWeight: saveGoalWeight,
     setActivityLevel: saveActivityLevel,
   } = profileStore;
+
+  // Premium status
+  const isPremium = usePremiumStore((state) => state.isPremium);
 
   // Local state for pickers (to avoid updating store on every scroll)
   const [localHeight, setLocalHeight] = useState(height);
@@ -169,30 +173,32 @@ const ProfileSettings = () => {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <SafeAreaView style={styles.safeArea} edges={['bottom']}>
           <View style={styles.content}>
-            {/* Premium Banner */}
-            <View style={styles.premiumBanner}>
-              <View style={styles.premiumTextBlock}>
-                <Text style={styles.premiumTitle}>👑 Unlock Premium!</Text>
-                <Text style={styles.premiumDescription}>
-                  Get personalized nutrition insights, exclusive features, and
-                  full access to your favorite meals.
-                </Text>
-                <TouchableOpacity
-                  style={styles.premiumButton}
-                  activeOpacity={0.8}
-                  onPress={() => {
-                    showPaywall(PLACEMENT_IDS.PAYWALL_MAIN);
-                  }}
-                >
-                  <Text style={styles.premiumButtonText}>Get Premium</Text>
-                </TouchableOpacity>
+            {/* Premium Banner - only show if not premium */}
+            {!isPremium && (
+              <View style={styles.premiumBanner}>
+                <View style={styles.premiumTextBlock}>
+                  <Text style={styles.premiumTitle}>👑 Unlock Premium!</Text>
+                  <Text style={styles.premiumDescription}>
+                    Get personalized nutrition insights, exclusive features, and
+                    full access to your favorite meals.
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.premiumButton}
+                    activeOpacity={0.8}
+                    onPress={() => {
+                      showPaywall(PLACEMENT_IDS.PAYWALL_MAIN);
+                    }}
+                  >
+                    <Text style={styles.premiumButtonText}>Get Premium</Text>
+                  </TouchableOpacity>
+                </View>
+                <Image
+                  source={require('../assets/img_banner_unlock_premium.png')}
+                  style={styles.premiumImage}
+                  resizeMode="contain"
+                />
               </View>
-              <Image
-                source={require('../assets/img_banner_unlock_premium.png')}
-                style={styles.premiumImage}
-                resizeMode="contain"
-              />
-            </View>
+            )}
 
             <SettingsCard
               title="Your Goal"

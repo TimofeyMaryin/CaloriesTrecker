@@ -29,6 +29,7 @@ import { useMealStore } from '../store/mealStore';
 import { useProfileStore } from '../store/profileStore';
 import { useWeightStore } from '../store/weightStore';
 import { useSettingsStore } from '../store/settingsStore';
+import { usePremiumStore } from '../store/premiumStore';
 import { showPaywall, PLACEMENT_IDS } from '../services/adapty';
 
 type NavigationProp = CompositeNavigationProp<
@@ -215,6 +216,7 @@ const MainScreen = () => {
   const headerDate = formatHeaderDate(selectedDate);
 
   const dontShowPhotoExample = useSettingsStore((state) => state.dontShowPhotoExample);
+  const { isPremium, canUseFeature, consumeFreeAttempt } = usePremiumStore();
 
   const handleAddAction = (id: AddActionId) => {
     setAddSheetVisible(false);
@@ -224,21 +226,33 @@ const MainScreen = () => {
 
     switch (id) {
       case 'scan':
-        // Show photo example if user hasn't disabled it
-        if (dontShowPhotoExample) {
-          navigation.navigate('Scan', { mode: 'camera', locale });
-        } else {
-          navigation.navigate('PhotoExample');
-        }
-        break;
       case 'gallery':
-        navigation.navigate('Scan', { mode: 'gallery', locale });
+      case 'voice':
+        // Check if user can use AI features (premium or has free attempts)
+        if (!canUseFeature()) {
+          // Show paywall if no free attempts left
+          showPaywall(PLACEMENT_IDS.PAYWALL_MAIN);
+          return;
+        }
+        
+        // Consume a free attempt (does nothing if premium)
+        consumeFreeAttempt();
+        
+        if (id === 'scan') {
+          // Show photo example if user hasn't disabled it
+          if (dontShowPhotoExample) {
+            navigation.navigate('Scan', { mode: 'camera', locale });
+          } else {
+            navigation.navigate('PhotoExample');
+          }
+        } else if (id === 'gallery') {
+          navigation.navigate('Scan', { mode: 'gallery', locale });
+        } else {
+          navigation.navigate('DescribeDish');
+        }
         break;
       case 'favorites':
         navigation.navigate('Favorite');
-        break;
-      case 'voice':
-        navigation.navigate('DescribeDish');
         break;
     }
   };
@@ -336,18 +350,20 @@ const MainScreen = () => {
               <Text style={styles.dateText}>{headerDate}</Text>
             </View>
             <View style={styles.rightContainer}>
-              <TouchableOpacity
-                style={styles.proButton}
-                activeOpacity={0.7}
-                onPress={handleProPress}
-              >
-                <Text style={styles.proText}>Pro</Text>
-                <Image
-                  source={require('../assets/icons/ic_crown.png')}
-                  style={styles.crownIcon}
-                  resizeMode="contain"
-                />
-              </TouchableOpacity>
+              {!isPremium && (
+                <TouchableOpacity
+                  style={styles.proButton}
+                  activeOpacity={0.7}
+                  onPress={handleProPress}
+                >
+                  <Text style={styles.proText}>Pro</Text>
+                  <Image
+                    source={require('../assets/icons/ic_crown.png')}
+                    style={styles.crownIcon}
+                    resizeMode="contain"
+                  />
+                </TouchableOpacity>
+              )}
               <TouchableOpacity
                 style={styles.favoriteButton}
                 activeOpacity={0.7}

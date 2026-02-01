@@ -18,6 +18,8 @@ import {
   RootStackParamList,
 } from '../navigation/AppNavigator';
 import { useSettingsStore } from '../store/settingsStore';
+import { usePremiumStore } from '../store/premiumStore';
+import { showPaywall, PLACEMENT_IDS } from '../services/adapty';
 
 type NavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<MainTabParamList>,
@@ -28,6 +30,7 @@ const SettingsScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const [addSheetVisible, setAddSheetVisible] = useState(false);
   const dontShowPhotoExample = useSettingsStore((state) => state.dontShowPhotoExample);
+  const { canUseFeature, consumeFreeAttempt } = usePremiumStore();
 
   const handleAddAction = (id: AddActionId) => {
     setAddSheetVisible(false);
@@ -36,22 +39,34 @@ const SettingsScreen = () => {
     const locale = 'en_US';
 
     switch (id) {
+      case 'scan':
       case 'gallery':
-        navigation.navigate('Scan', { mode: 'gallery', locale });
+      case 'voice':
+        // Check if user can use AI features (premium or has free attempts)
+        if (!canUseFeature()) {
+          // Show paywall if no free attempts left
+          showPaywall(PLACEMENT_IDS.PAYWALL_MAIN);
+          return;
+        }
+        
+        // Consume a free attempt (does nothing if premium)
+        consumeFreeAttempt();
+        
+        if (id === 'scan') {
+          // Show photo example if user hasn't disabled it
+          if (dontShowPhotoExample) {
+            navigation.navigate('Scan', { mode: 'camera', locale });
+          } else {
+            navigation.navigate('PhotoExample');
+          }
+        } else if (id === 'gallery') {
+          navigation.navigate('Scan', { mode: 'gallery', locale });
+        } else {
+          navigation.navigate('DescribeDish');
+        }
         break;
       case 'favorites':
         navigation.navigate('Favorite');
-        break;
-      case 'voice':
-        navigation.navigate('DescribeDish');
-        break;
-      case 'scan':
-        // Show photo example if user hasn't disabled it
-        if (dontShowPhotoExample) {
-          navigation.navigate('Scan', { mode: 'camera', locale });
-        } else {
-          navigation.navigate('PhotoExample');
-        }
         break;
     }
   };

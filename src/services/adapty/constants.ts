@@ -17,7 +17,7 @@ export const PLACEMENT_IDS = {
 export const ACCESS_LEVEL_PREMIUM = 'premium';
 
 // Free attempts configuration
-export const FREE_ATTEMPTS_LIMIT = 3;
+export const FREE_ATTEMPTS_LIMIT = 4;
 
 // Action IDs from onboarding (for quiz answers)
 export const ONBOARDING_ACTION_IDS = {
