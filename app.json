@@ -1,4 +1,50 @@
 {
-  "name": "CaloriesTrecker",
-  "displayName": "CaloriesTrecker"
+  "expo": {
+    "name": "CaloriesTrecker",
+    "slug": "calories-trecker",
+    "version": "0.0.1",
+    "orientation": "portrait",
+    "icon": "./src/assets/icon.jpg",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#F3FCF2"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ai.calorie.counter.food.tracker",
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Allow access to your photos to choose meal images.",
+        "NSPhotoLibraryAddUsageDescription": "Allow access to save meal photos to your gallery.",
+        "NSMicrophoneUsageDescription": "Allow access to microphone to record voice for meal description.",
+        "NSSpeechRecognitionUsageDescription": "Allow speech recognition to convert your voice to text for meal description."
+      }
+    },
+    "android": {
+      "googleServicesFile": "./google-services.json"
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow access to your photos to choose meal images."
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow access to your photos to choose meal images.",
+          "savePhotosPermission": "Allow access to save meal photos to your gallery."
+        }
+      ],
+      "@react-native-voice/voice",
+      "@react-native-firebase/app",
+      "./src/plugins/withFirebaseModularHeaders.js"
+    ],
+    "scheme": "caloriestrecker",
+    "newArchEnabled": true
+  }
 }

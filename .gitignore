@@ -1,10 +1,31 @@
-# OSX
-#
-.DS_Store
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native builds (regenerated via `expo prebuild`)
+ios/
+android/
+
+# CocoaPods (regenerated via `pod install`)
+**/Pods/
+
+# Build outputs
+*.jsbundle
+*.hbc
+build/
+DerivedData/
+*.ipa
+*.apk
+*.aab
 
 # Xcode
-#
-build/
 *.pbxuser
 !default.pbxuser
 *.mode1v3
@@ -13,58 +34,49 @@ build/
 !default.mode2v3
 *.perspectivev3
 !default.perspectivev3
-xcuserdata
+xcuserdata/
 *.xccheckout
 *.moved-aside
-DerivedData
 *.hmap
-*.ipa
 *.xcuserstate
 **/.xcode.env.local
 
-# Android/IntelliJ
-#
-build/
-.idea
-.gradle
-local.properties
-*.iml
-*.hprof
-.cxx/
-*.keystore
-!debug.keystore
-.kotlin/
+# macOS
+.DS_Store
+*.pem
+.AppleDouble
+.LSOverride
+._*
 
-# node.js
-#
-node_modules/
-npm-debug.log
-yarn-error.log
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# fastlane
-#
-# It is recommended to not store the screenshots in the git repo. Instead, use fastlane to re-generate the
-# screenshots whenever they are needed.
-# For more information about the recommended setup visit:
-# https://docs.fastlane.tools/best-practices/source-control/
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
 
-**/fastlane/report.xml
-**/fastlane/Preview.html
-**/fastlane/screenshots
-**/fastlane/test_output
+# Testing
+coverage/
 
-# Bundle artifact
-*.jsbundle
-
-# Ruby / CocoaPods
-**/Pods/
-/vendor/bundle/
-
-# Temporary files created by Metro to check the health of the file watcher
+# Metro
 .metro-health-check*
 
-# testing
-/coverage
+# Watchman
+.watchman-*
+
+# Ruby / Bundler
+/vendor/bundle/
+.bundle/
+
+# Fastlane
+**/fastlane/report.xml
+**/fastlane/Preview.html
+**/fastlane/screenshots/
+**/fastlane/test_output/
 
 # Yarn
 .yarn/*
@@ -73,3 +85,22 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# Environment variables (keep templates)
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# TypeScript
+*.tsbuildinfo
+
+# Temporary files
+tmp/
+temp/
