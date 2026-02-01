@@ -34,7 +34,7 @@
     "expo-media-library": "^18.2.1",
     "expo-store-review": "^9.0.9",
     "react": "19.1.0",
-    "react-native": "0.81.0",
+    "react-native": "^0.81.5",
     "react-native-adapty": "^3.15.2",
     "react-native-gesture-handler": "~2.28.0",
     "react-native-reanimated": "~4.1.1",
