@@ -11,6 +11,7 @@ import DescribeDishScreen from '../screens/DescribeDishScreen';
 import PhotoExampleScreen from '../screens/PhotoExampleScreen';
 import ScanScreen from '../screens/ScanScreen';
 import MealResultScreen from '../screens/MealResultScreen';
+import CorrectionScreen from '../screens/CorrectionScreen';
 import OnboardingScreen from '../screens/OnboardingScreen';
 import FAQScreen from '../screens/FAQScreen';
 import { colors } from '../theme/colors';
@@ -28,6 +29,7 @@ export type RootStackParamList = {
   PhotoExample: undefined;
   Scan: { mode: 'camera' | 'gallery'; locale: string };
   MealResult: { meal: MealRecord };
+  Correction: { meal: MealRecord };
 };
 
 export type MainTabParamList = {
@@ -74,6 +76,7 @@ const AppNavigator = () => {
         <Stack.Screen name="PhotoExample" component={PhotoExampleScreen} />
         <Stack.Screen name="Scan" component={ScanScreen} />
         <Stack.Screen name="MealResult" component={MealResultScreen} />
+        <Stack.Screen name="Correction" component={CorrectionScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

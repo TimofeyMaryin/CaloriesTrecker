@@ -87,17 +87,14 @@ const MealResultScreen = () => {
   };
 
   const handleCorrectResult = () => {
-    // Reset navigation stack to main screen
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'MainTabs' }],
-    });
+    // Navigate to correction screen
+    navigation.navigate('Correction', { meal });
   };
 
   const handleReset = () => {
     setMenuVisible(false);
-    // Go back to retry the request
-    navigation.goBack();
+    // Reset excluded ingredients
+    setExcludedIndices(new Set());
   };
 
   const handleDelete = () => {
@@ -205,9 +202,13 @@ const MealResultScreen = () => {
           onPress={() => setMenuVisible(false)}
         >
           <View style={[styles.menuContainer, { top: insets.top + 50, right: 16 }]}>
-            <TouchableOpacity style={styles.menuItem} onPress={handleReset}>
-              <Text style={styles.menuIcon}>↺</Text>
-              <Text style={styles.menuText}>Reset</Text>
+            <TouchableOpacity 
+              style={[styles.menuItem, excludedIndices.size === 0 && styles.menuItemDisabled]} 
+              onPress={handleReset}
+              disabled={excludedIndices.size === 0}
+            >
+              <Text style={[styles.menuIcon, excludedIndices.size === 0 && styles.menuTextDisabled]}>↺</Text>
+              <Text style={[styles.menuText, excludedIndices.size === 0 && styles.menuTextDisabled]}>Reset</Text>
             </TouchableOpacity>
             <View style={styles.menuDivider} />
             <TouchableOpacity style={styles.menuItem} onPress={handleDelete}>
@@ -238,14 +239,14 @@ const MealResultScreen = () => {
           <View style={styles.servingsContainer}>
             <TouchableOpacity
               style={styles.servingButton}
-              onPress={() => setServings(Math.max(1, servings - 1))}
+              onPress={() => setServings(Math.max(0.25, servings - 0.25))}
             >
               <Text style={styles.servingButtonText}>−</Text>
             </TouchableOpacity>
             <Text style={styles.servingsCount}>{servings}</Text>
             <TouchableOpacity
               style={styles.servingButton}
-              onPress={() => setServings(servings + 1)}
+              onPress={() => setServings(servings + 0.25)}
             >
               <Text style={styles.servingButtonText}>+</Text>
             </TouchableOpacity>
@@ -456,6 +457,12 @@ const styles = StyleSheet.create({
   menuText: {
     fontSize: 16,
     color: colors.text,
+  },
+  menuItemDisabled: {
+    opacity: 0.4,
+  },
+  menuTextDisabled: {
+    color: colors.textSecondary,
   },
   menuDivider: {
     height: 1,

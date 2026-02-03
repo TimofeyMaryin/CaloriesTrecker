@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { Swipeable } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -13,13 +14,15 @@ import { MealRecord } from '../types/meal';
 interface MealCardProps {
   meal: MealRecord;
   onPress: () => void;
+  onDelete?: () => void;
   index?: number;
 }
 
 const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
-const MealCard: React.FC<MealCardProps> = ({ meal, onPress, index = 0 }) => {
+const MealCard: React.FC<MealCardProps> = ({ meal, onPress, onDelete, index = 0 }) => {
   const hasAnimated = useRef(false);
+  const swipeableRef = useRef<Swipeable>(null);
   const opacity = useSharedValue(1); // Start visible
   const translateY = useSharedValue(0); // Start in place
 
@@ -46,7 +49,26 @@ const MealCard: React.FC<MealCardProps> = ({ meal, onPress, index = 0 }) => {
     hour12: false,
   });
 
-  return (
+  const renderRightActions = () => {
+    if (!onDelete) return null;
+    return (
+      <TouchableOpacity
+        style={styles.deleteAction}
+        onPress={() => {
+          swipeableRef.current?.close();
+          onDelete();
+        }}
+      >
+        <Image
+          source={require('../assets/icons/ic_delete.png')}
+          style={styles.deleteIcon}
+          resizeMode="contain"
+        />
+      </TouchableOpacity>
+    );
+  };
+
+  const cardContent = (
     <AnimatedTouchableOpacity
       style={[styles.container, animatedStyle]}
       onPress={onPress}
@@ -96,6 +118,20 @@ const MealCard: React.FC<MealCardProps> = ({ meal, onPress, index = 0 }) => {
         <Text style={styles.caloriesUnit}>kcal</Text>
       </View>
     </AnimatedTouchableOpacity>
+  );
+
+  if (!onDelete) {
+    return cardContent;
+  }
+
+  return (
+    <Swipeable
+      ref={swipeableRef}
+      renderRightActions={renderRightActions}
+      overshootRight={false}
+    >
+      {cardContent}
+    </Swipeable>
   );
 };
 
@@ -165,6 +201,20 @@ const styles = StyleSheet.create({
   caloriesUnit: {
     fontSize: 11,
     color: colors.textSecondary,
+  },
+  deleteAction: {
+    backgroundColor: '#FF6B6B',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    marginBottom: 8,
+    borderTopRightRadius: 16,
+    borderBottomRightRadius: 16,
+  },
+  deleteIcon: {
+    width: 24,
+    height: 24,
+    tintColor: colors.white,
   },
 });
 

@@ -108,7 +108,7 @@ const MainScreen = () => {
   const [localWeight, setLocalWeight] = useState(70);
 
   // Stores
-  const meals = useMealStore((state) => state.meals);
+  const { meals, removeMeal } = useMealStore();
   const targets = useProfileStore((state) => state.targets);
   const { weight, goalWeight, setWeight: saveWeight } = useProfileStore();
   const { entries: weightEntries, addEntry: addWeightEntry } = useWeightStore();
@@ -294,6 +294,7 @@ const MainScreen = () => {
               meal={meal}
               index={index}
               onPress={() => navigation.navigate('MealResult', { meal })}
+              onDelete={() => removeMeal(meal.id)}
             />
           ))
         ) : (

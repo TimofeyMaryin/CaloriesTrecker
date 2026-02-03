@@ -20,6 +20,11 @@ interface MealState {
     imageUri?: string,
   ) => MealRecord;
   
+  updateMeal: (
+    id: string,
+    updates: Partial<Pick<MealRecord, 'title' | 'health' | 'ingredients'>>,
+  ) => void;
+  
   removeMeal: (id: string) => void;
   
   getMealsByDate: (date: string) => MealRecord[];
@@ -52,6 +57,26 @@ export const useMealStore = create<MealState>()(
         }));
 
         return meal;
+      },
+
+      updateMeal: (id, updates) => {
+        set((state) => ({
+          meals: state.meals.map((meal) => {
+            if (meal.id !== id) return meal;
+            
+            const updatedMeal = {
+              ...meal,
+              ...updates,
+            };
+            
+            // Recalculate totals if ingredients changed
+            if (updates.ingredients) {
+              updatedMeal.totals = calculateTotals(updates.ingredients);
+            }
+            
+            return updatedMeal;
+          }),
+        }));
       },
 
       removeMeal: (id) => {

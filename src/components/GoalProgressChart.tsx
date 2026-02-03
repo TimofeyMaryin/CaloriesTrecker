@@ -107,12 +107,26 @@ const GoalProgressChart: React.FC<GoalProgressChartProps> = ({
     return dayMap;
   }, [entries]);
 
-  // Fill all days with weight data (use last known weight or current weight)
+  // Fill all days with weight data (use last known weight from BEFORE that day)
   const allDayEntries = useMemo(() => {
     const result: WeightEntry[] = [];
-    let lastKnownWeight = currentWeight;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+
+    // Sort all entries by date to find weights before each day
+    const sortedEntries = [...entries].sort((a, b) => a.date.localeCompare(b.date));
+    
+    // Find the last known weight BEFORE the start of this month
+    const firstDayKey = `${year}-${String(monthIndex + 1).padStart(2, '0')}-01`;
+    let lastKnownWeight = currentWeight; // fallback
+    
+    for (const entry of sortedEntries) {
+      if (entry.date < firstDayKey) {
+        lastKnownWeight = entry.weight;
+      } else {
+        break;
+      }
+    }
 
     for (let day = 1; day <= daysInMonth; day++) {
       const dateKey = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -126,7 +140,7 @@ const GoalProgressChart: React.FC<GoalProgressChartProps> = ({
         lastKnownWeight = entry.weight;
         result.push(entry);
       } else {
-        // Use last known weight for days without entries
+        // Use last known weight for days without entries (weight as of that day)
         result.push({ date: dateKey, weight: lastKnownWeight });
       }
     }
@@ -138,7 +152,7 @@ const GoalProgressChart: React.FC<GoalProgressChartProps> = ({
     }
     
     return result;
-  }, [userEntries, daysInMonth, year, monthIndex, currentWeight]);
+  }, [entries, userEntries, daysInMonth, year, monthIndex, currentWeight]);
 
   const weightDiff = Math.round(Math.abs(currentWeight - goalWeight));
 
