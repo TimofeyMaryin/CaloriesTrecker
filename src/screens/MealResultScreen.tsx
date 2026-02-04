@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -34,15 +34,39 @@ const MealResultScreen = () => {
   const insets = useSafeAreaInsets();
   const { meal } = route.params;
 
-  const [servings, setServings] = useState(1);
+  // Initialize servings from meal or default to 1
+  const [servings, setServings] = useState(meal.servings ?? 1);
   const [menuVisible, setMenuVisible] = useState(false);
   const [ingredients, setIngredients] = useState<Ingredient[]>(meal.ingredients);
-  const [excludedIndices, setExcludedIndices] = useState<Set<number>>(new Set());
+  
+  // Initialize excludedIndices from ingredients with excluded flag
+  const [excludedIndices, setExcludedIndices] = useState<Set<number>>(() => {
+    const excluded = new Set<number>();
+    meal.ingredients.forEach((ing, index) => {
+      if (ing.excluded) excluded.add(index);
+    });
+    return excluded;
+  });
 
   // Stores
   const { isFavorite, toggleFavorite } = useFavoriteStore();
-  const { removeMeal } = useMealStore();
+  const { removeMeal, updateMeal } = useMealStore();
   const [isLiked, setIsLiked] = useState(isFavorite(meal.id));
+
+  // Save changes to store
+  const saveChanges = useCallback(() => {
+    // Update ingredients with excluded flag
+    const updatedIngredients = ingredients.map((ing, index) => ({
+      ...ing,
+      excluded: excludedIndices.has(index),
+    }));
+    
+    // Update meal in store
+    updateMeal(meal.id, {
+      ingredients: updatedIngredients,
+      servings: servings,
+    });
+  }, [ingredients, excludedIndices, servings, meal.id, updateMeal]);
 
   // Calculate values based on non-excluded ingredients and servings
   const totals = ingredients.reduce(
@@ -64,6 +88,8 @@ const MealResultScreen = () => {
   const fats = Math.round(totals.fats * servings * 10) / 10;
 
   const handleBack = () => {
+    // Save changes before leaving
+    saveChanges();
     // Reset navigation stack to avoid accumulating screens
     navigation.reset({
       index: 0,
@@ -93,8 +119,11 @@ const MealResultScreen = () => {
 
   const handleReset = () => {
     setMenuVisible(false);
-    // Reset excluded ingredients
+    // Reset excluded ingredients and servings to original
     setExcludedIndices(new Set());
+    setServings(1);
+    // Reset ingredients to original (remove excluded flags)
+    setIngredients(meal.ingredients.map(ing => ({ ...ing, excluded: false })));
   };
 
   const handleDelete = () => {

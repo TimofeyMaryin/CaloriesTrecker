@@ -22,7 +22,7 @@ interface MealState {
   
   updateMeal: (
     id: string,
-    updates: Partial<Pick<MealRecord, 'title' | 'health' | 'ingredients'>>,
+    updates: Partial<Pick<MealRecord, 'title' | 'health' | 'ingredients' | 'servings'>>,
   ) => void;
   
   removeMeal: (id: string) => void;
@@ -46,7 +46,8 @@ export const useMealStore = create<MealState>()(
           title,
           health,
           ingredients,
-          totals: calculateTotals(ingredients),
+          totals: calculateTotals(ingredients, 1),
+          servings: 1,
           imageUri,
           createdAt: now.toISOString(),
           date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`, // YYYY-MM-DD (local time)
@@ -69,9 +70,11 @@ export const useMealStore = create<MealState>()(
               ...updates,
             };
             
-            // Recalculate totals if ingredients changed
-            if (updates.ingredients) {
-              updatedMeal.totals = calculateTotals(updates.ingredients);
+            // Recalculate totals if ingredients or servings changed
+            if (updates.ingredients !== undefined || updates.servings !== undefined) {
+              const ingredients = updates.ingredients ?? meal.ingredients;
+              const servings = updates.servings ?? meal.servings ?? 1;
+              updatedMeal.totals = calculateTotals(ingredients, servings);
             }
             
             return updatedMeal;

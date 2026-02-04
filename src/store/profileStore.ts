@@ -8,6 +8,8 @@ import {
   DEFAULT_TARGETS,
 } from '../utils/nutritionCalculator';
 
+export type UnitSystem = 'metric' | 'imperial';
+
 interface ProfileState {
   // Profile data
   weight: number;
@@ -15,6 +17,7 @@ interface ProfileState {
   age: number;
   goalWeight: number;
   activityLevel: 'minimum' | 'light' | 'moderate' | 'high';
+  unitSystem: UnitSystem;
   
   // Computed targets
   targets: NutritionTargets;
@@ -25,6 +28,7 @@ interface ProfileState {
   setAge: (age: number) => void;
   setGoalWeight: (goalWeight: number) => void;
   setActivityLevel: (level: 'minimum' | 'light' | 'moderate' | 'high') => void;
+  setUnitSystem: (system: UnitSystem) => void;
   getProfile: () => UserProfile;
   recalculateTargets: () => void;
 }
@@ -38,6 +42,7 @@ export const useProfileStore = create<ProfileState>()(
       age: 30,
       goalWeight: 70,
       activityLevel: 'light',
+      unitSystem: 'metric',
       targets: DEFAULT_TARGETS,
 
       setWeight: (weight) => {
@@ -63,6 +68,10 @@ export const useProfileStore = create<ProfileState>()(
       setActivityLevel: (activityLevel) => {
         set({ activityLevel });
         get().recalculateTargets();
+      },
+
+      setUnitSystem: (unitSystem) => {
+        set({ unitSystem });
       },
 
       getProfile: () => {

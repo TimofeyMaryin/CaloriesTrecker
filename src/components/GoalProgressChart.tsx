@@ -10,12 +10,14 @@ import Animated, {
 } from 'react-native-reanimated';
 import { colors } from '../theme/colors';
 import { WeightEntry } from '../store/weightStore';
+import { weightFromMetric, getWeightUnit } from '../utils/unitConversion';
 
 interface GoalProgressChartProps {
   entries: WeightEntry[];
   goalWeight: number;
   currentWeight: number;
   monthLabel: string;
+  isImperial: boolean;
   onPrevMonth: () => void;
   onNextMonth: () => void;
   onAddWeight: () => void;
@@ -81,6 +83,7 @@ const GoalProgressChart: React.FC<GoalProgressChartProps> = ({
   goalWeight,
   currentWeight,
   monthLabel,
+  isImperial,
   onPrevMonth,
   onNextMonth,
   onAddWeight,
@@ -154,7 +157,10 @@ const GoalProgressChart: React.FC<GoalProgressChartProps> = ({
     return result;
   }, [entries, userEntries, daysInMonth, year, monthIndex, currentWeight]);
 
-  const weightDiff = Math.round(Math.abs(currentWeight - goalWeight));
+  // Calculate weight difference in display units
+  const weightDiffKg = Math.abs(currentWeight - goalWeight);
+  const weightDiff = Math.round(weightFromMetric(weightDiffKg, isImperial));
+  const weightUnit = getWeightUnit(isImperial);
 
   // Calculate chart dimensions
   const chartWidth = 300;
@@ -208,7 +214,7 @@ const GoalProgressChart: React.FC<GoalProgressChartProps> = ({
         <View style={styles.badge}>
           <Text style={styles.badgeIcon}>🎯</Text>
           <Text style={styles.badgeText}>
-            {weightDiff > 0 ? `${weightDiff} kg to go!` : 'Goal reached!'}
+            {weightDiff > 0 ? `${weightDiff} ${weightUnit} to go!` : 'Goal reached!'}
           </Text>
         </View>
       </View>
@@ -254,7 +260,7 @@ const GoalProgressChart: React.FC<GoalProgressChartProps> = ({
                     fill="#999"
                     textAnchor="end"
                   >
-                    {label}
+                    {Math.round(weightFromMetric(label, isImperial))}
                   </SvgText>
                 </React.Fragment>
               );
@@ -306,7 +312,7 @@ const GoalProgressChart: React.FC<GoalProgressChartProps> = ({
 
           {/* Goal badge (positioned absolutely) */}
           <View style={[styles.goalLabelBadge, { top: goalLineY - 12 }]}>
-            <Text style={styles.goalLabelText}>{goalWeight}</Text>
+            <Text style={styles.goalLabelText}>{Math.round(weightFromMetric(goalWeight, isImperial))}</Text>
           </View>
         </View>
       </View>

@@ -20,6 +20,13 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import { useProfileStore } from '../store/profileStore';
 import { usePremiumStore } from '../store/premiumStore';
 import { showPaywall, PLACEMENT_IDS } from '../services/adapty';
+import { 
+  weightFromMetric, 
+  weightToMetric, 
+  getWeightUnit,
+  cmToFtIn,
+  ftInToCm,
+} from '../utils/unitConversion';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -72,12 +79,15 @@ const ProfileSettings = () => {
     age, 
     goalWeight, 
     activityLevel,
+    unitSystem,
     setHeight: saveHeight,
     setWeight: saveWeight,
     setAge: saveAge,
     setGoalWeight: saveGoalWeight,
     setActivityLevel: saveActivityLevel,
   } = profileStore;
+  
+  const isImperial = unitSystem === 'imperial';
 
   // Premium status
   const isPremium = usePremiumStore((state) => state.isPremium);
@@ -90,11 +100,19 @@ const ProfileSettings = () => {
   const [localActivityLevel, setLocalActivityLevel] = useState<ActivityLevel>(activityLevel);
 
   const openSheet = (type: SheetType) => () => {
-    // Reset local values when opening sheet
-    if (type === 'height') setLocalHeight(height);
-    if (type === 'weight') setLocalWeight(weight);
+    // Reset local values when opening sheet (convert to display units)
+    if (type === 'height') {
+      if (isImperial) {
+        // Convert cm to total inches for slider
+        const totalInches = Math.round(height / 2.54);
+        setLocalHeight(totalInches);
+      } else {
+        setLocalHeight(height);
+      }
+    }
+    if (type === 'weight') setLocalWeight(Math.round(weightFromMetric(weight, isImperial)));
     if (type === 'age') setLocalAge(age);
-    if (type === 'goal') setLocalGoalWeight(goalWeight);
+    if (type === 'goal') setLocalGoalWeight(Math.round(weightFromMetric(goalWeight, isImperial)));
     if (type === 'activity') setLocalActivityLevel(activityLevel);
     setSheetOpen(type);
   };
@@ -105,19 +123,25 @@ const ProfileSettings = () => {
   };
 
   const handleDone = () => {
-    // Save to profile store based on current sheet
+    // Save to profile store based on current sheet (convert back to metric)
     switch (sheetOpen) {
       case 'height':
-        saveHeight(localHeight);
+        if (isImperial) {
+          // Convert total inches back to cm
+          const heightCm = Math.round(localHeight * 2.54);
+          saveHeight(heightCm);
+        } else {
+          saveHeight(localHeight);
+        }
         break;
       case 'weight':
-        saveWeight(localWeight);
+        saveWeight(weightToMetric(localWeight, isImperial));
         break;
       case 'age':
         saveAge(localAge);
         break;
       case 'goal':
-        saveGoalWeight(localGoalWeight);
+        saveGoalWeight(weightToMetric(localGoalWeight, isImperial));
         break;
       case 'activity':
         saveActivityLevel(localActivityLevel);
@@ -266,10 +290,10 @@ const ProfileSettings = () => {
       >
         <View style={styles.sheetContent}>
           <HorizontalRulerPicker
-            min={100}
-            max={220}
+            min={isImperial ? 39 : 100}
+            max={isImperial ? 87 : 220}
             initialValue={localHeight}
-            unit="cm"
+            unit={isImperial ? 'in' : 'cm'}
             onValueChange={setLocalHeight}
           />
           <TouchableOpacity
@@ -290,10 +314,10 @@ const ProfileSettings = () => {
       >
         <View style={styles.sheetContent}>
           <HorizontalRulerPicker
-            min={30}
-            max={200}
+            min={isImperial ? 66 : 30}
+            max={isImperial ? 440 : 200}
             initialValue={localWeight}
-            unit="kg"
+            unit={getWeightUnit(isImperial)}
             onValueChange={setLocalWeight}
           />
           <TouchableOpacity
@@ -338,13 +362,13 @@ const ProfileSettings = () => {
       >
         <View style={styles.sheetContent}>
           <Text style={styles.goalLabel}>
-            Goal: {localGoalWeight === weight ? 'Maintain Weight' : localGoalWeight < weight ? 'Lose Weight' : 'Gain Weight'}
+            Goal: {localGoalWeight === Math.round(weightFromMetric(weight, isImperial)) ? 'Maintain Weight' : localGoalWeight < Math.round(weightFromMetric(weight, isImperial)) ? 'Lose Weight' : 'Gain Weight'}
           </Text>
           <HorizontalRulerPicker
-            min={30}
-            max={200}
+            min={isImperial ? 66 : 30}
+            max={isImperial ? 440 : 200}
             initialValue={localGoalWeight}
-            unit="kg"
+            unit={getWeightUnit(isImperial)}
             onValueChange={setLocalGoalWeight}
           />
           <TouchableOpacity

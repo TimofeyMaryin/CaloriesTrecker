@@ -6,7 +6,9 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
+  Platform,
 } from 'react-native';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { CompositeNavigationProp } from '@react-navigation/native';
@@ -28,6 +30,7 @@ import { MainTabParamList, RootStackParamList } from '../navigation/AppNavigator
 import { useMealStore } from '../store/mealStore';
 import { useProfileStore } from '../store/profileStore';
 import { useWeightStore } from '../store/weightStore';
+import { weightFromMetric, weightToMetric, getWeightUnit } from '../utils/unitConversion';
 import { useSettingsStore } from '../store/settingsStore';
 import { usePremiumStore } from '../store/premiumStore';
 import { showPaywall, PLACEMENT_IDS } from '../services/adapty';
@@ -106,12 +109,16 @@ const MainScreen = () => {
   const [selectedMonth, setSelectedMonth] = useState(() => new Date());
   const [weightSheetVisible, setWeightSheetVisible] = useState(false);
   const [localWeight, setLocalWeight] = useState(70);
+  const [weightDate, setWeightDate] = useState(() => new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   // Stores
   const { meals, removeMeal } = useMealStore();
   const targets = useProfileStore((state) => state.targets);
-  const { weight, goalWeight, setWeight: saveWeight } = useProfileStore();
+  const { weight, goalWeight, setWeight: saveWeight, unitSystem } = useProfileStore();
   const { entries: weightEntries, addEntry: addWeightEntry } = useWeightStore();
+  
+  const isImperial = unitSystem === 'imperial';
 
   // Get meals for selected date
   const selectedDateKey = formatDateKey(selectedDate);
@@ -203,14 +210,49 @@ const MainScreen = () => {
 
   // Weight sheet handlers
   const handleOpenWeightSheet = () => {
-    setLocalWeight(weight);
+    // Convert from stored kg to display units
+    setLocalWeight(Math.round(weightFromMetric(weight, isImperial)));
+    setWeightDate(new Date());
+    setShowDatePicker(false);
     setWeightSheetVisible(true);
   };
 
   const handleSaveWeight = () => {
-    saveWeight(localWeight);
-    addWeightEntry(localWeight);
+    // Convert from display units back to kg for storage
+    const weightInKg = weightToMetric(localWeight, isImperial);
+    saveWeight(weightInKg);
+    // Format date as YYYY-MM-DD
+    const dateStr = `${weightDate.getFullYear()}-${String(weightDate.getMonth() + 1).padStart(2, '0')}-${String(weightDate.getDate()).padStart(2, '0')}`;
+    addWeightEntry(weightInKg, dateStr);
     setWeightSheetVisible(false);
+  };
+
+  const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
+    if (selectedDate) {
+      setWeightDate(selectedDate);
+    }
+  };
+
+  const formatWeightDate = (date: Date): string => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dateOnly = new Date(date);
+    dateOnly.setHours(0, 0, 0, 0);
+    
+    if (dateOnly.getTime() === today.getTime()) {
+      return 'Today';
+    }
+    
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (dateOnly.getTime() === yesterday.getTime()) {
+      return 'Yesterday';
+    }
+    
+    return `${MONTH_NAMES[date.getMonth()].slice(0, 3)} ${date.getDate()}, ${date.getFullYear()}`;
   };
 
   const headerDate = formatHeaderDate(selectedDate);
@@ -330,6 +372,7 @@ const MainScreen = () => {
         goalWeight={goalWeight}
         currentWeight={weight}
         monthLabel={getMonthLabel()}
+        isImperial={isImperial}
         onPrevMonth={handlePrevMonth}
         onNextMonth={handleNextMonth}
         onAddWeight={handleOpenWeightSheet}
@@ -442,14 +485,36 @@ const MainScreen = () => {
       <BottomSheet
         visible={weightSheetVisible}
         onClose={handleCloseWeightSheet}
-        title="Current Weight"
+        title="Your Weight"
       >
         <View style={styles.weightSheetContent}>
+          {/* Date Picker Chip */}
+          <TouchableOpacity
+            style={styles.dateChip}
+            onPress={() => setShowDatePicker(!showDatePicker)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.dateChipIcon}>📅</Text>
+            <Text style={styles.dateChipText}>{formatWeightDate(weightDate)}</Text>
+          </TouchableOpacity>
+
+          {/* Date Picker */}
+          {showDatePicker && (
+            <DateTimePicker
+              value={weightDate}
+              mode="date"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              onChange={handleDateChange}
+              maximumDate={new Date()}
+              style={styles.datePicker}
+            />
+          )}
+
           <HorizontalRulerPicker
-            min={30}
-            max={200}
+            min={isImperial ? 66 : 30}
+            max={isImperial ? 440 : 200}
             initialValue={localWeight}
-            unit="kg"
+            unit={getWeightUnit(isImperial)}
             onValueChange={setLocalWeight}
           />
           <TouchableOpacity
@@ -457,7 +522,7 @@ const MainScreen = () => {
             activeOpacity={0.8}
             onPress={handleSaveWeight}
           >
-            <Text style={styles.doneButtonText}>Done</Text>
+            <Text style={styles.doneButtonText}>Save weight</Text>
           </TouchableOpacity>
         </View>
       </BottomSheet>
@@ -603,6 +668,29 @@ const styles = StyleSheet.create({
   },
   weightSheetContent: {
     padding: 16,
+  },
+  dateChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'center',
+    backgroundColor: colors.accent,
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  dateChipIcon: {
+    fontSize: 14,
+    marginRight: 6,
+  },
+  dateChipText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.white,
+  },
+  datePicker: {
+    alignSelf: 'center',
+    marginBottom: 16,
   },
   doneButton: {
     backgroundColor: colors.accent,

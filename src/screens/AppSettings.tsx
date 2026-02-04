@@ -8,6 +8,7 @@ import {
   ScrollView,
   Linking,
   Alert,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -21,6 +22,7 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import { FirebaseService } from '../services/firebase';
 import { AdaptyManager } from '../services/adapty';
 import { useSettingsStore } from '../store/settingsStore';
+import { useProfileStore, UnitSystem } from '../store/profileStore';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -30,6 +32,7 @@ const TERMS_OF_USE_URL = 'https://docs.google.com/document/d/1m_jf9YdeEFjuKJvWYy
 const AppSettings = () => {
   const navigation = useNavigation<NavigationProp>();
   const { savePhotoEnabled, setSavePhotoEnabled } = useSettingsStore();
+  const { unitSystem, setUnitSystem } = useProfileStore();
   const [feedbackModalVisible, setFeedbackModalVisible] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
 
@@ -157,6 +160,52 @@ const AppSettings = () => {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <SafeAreaView style={styles.safeArea} edges={['bottom']}>
           <View style={styles.content}>
+            {/* Units of Measurement */}
+            <Text style={styles.sectionTitle}>Units of measurement</Text>
+            <View style={styles.unitCard}>
+              <TouchableOpacity
+                style={[
+                  styles.unitOption,
+                  unitSystem === 'imperial' && styles.unitOptionSelected,
+                ]}
+                onPress={() => setUnitSystem('imperial')}
+              >
+                <Text style={[
+                  styles.unitOptionText,
+                  unitSystem === 'imperial' && styles.unitOptionTextSelected,
+                ]}>
+                  Imperial
+                </Text>
+                <View style={[
+                  styles.radioOuter,
+                  unitSystem === 'imperial' && styles.radioOuterSelected,
+                ]}>
+                  {unitSystem === 'imperial' && <View style={styles.radioInner} />}
+                </View>
+              </TouchableOpacity>
+              <View style={styles.unitDivider} />
+              <TouchableOpacity
+                style={[
+                  styles.unitOption,
+                  unitSystem === 'metric' && styles.unitOptionSelected,
+                ]}
+                onPress={() => setUnitSystem('metric')}
+              >
+                <Text style={[
+                  styles.unitOptionText,
+                  unitSystem === 'metric' && styles.unitOptionTextSelected,
+                ]}>
+                  Metric
+                </Text>
+                <View style={[
+                  styles.radioOuter,
+                  unitSystem === 'metric' && styles.radioOuterSelected,
+                ]}>
+                  {unitSystem === 'metric' && <View style={styles.radioInner} />}
+                </View>
+              </TouchableOpacity>
+            </View>
+
             {/* Save Photo Toggle */}
             <View style={styles.toggleCard}>
               <View style={styles.toggleTextBlock}>
@@ -276,6 +325,52 @@ const styles = StyleSheet.create({
   cardIcon: {
     width: 22,
     height: 22,
+  },
+  unitCard: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    marginBottom: 24,
+    overflow: 'hidden',
+  },
+  unitOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+  },
+  unitOptionSelected: {
+    backgroundColor: colors.white,
+  },
+  unitOptionText: {
+    fontSize: 16,
+    color: colors.text,
+  },
+  unitOptionTextSelected: {
+    fontWeight: '600',
+  },
+  unitDivider: {
+    height: 1,
+    backgroundColor: '#E8E8E8',
+    marginLeft: 16,
+  },
+  radioOuter: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#DCDEDB',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  radioOuterSelected: {
+    borderColor: colors.accent,
+  },
+  radioInner: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: colors.accent,
   },
 });
 

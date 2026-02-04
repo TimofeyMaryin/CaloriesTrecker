@@ -96,11 +96,28 @@ function imperialToCm(feet: number, inches: number): number {
  * Save collected answers to profile store
  */
 function saveAnswersToProfile(answers: OnboardingAnswers): void {
+  console.log('[Onboarding] All collected answers:', JSON.stringify(answers, null, 2));
   const profileStore = useProfileStore.getState();
   
   // Determine if using imperial units
-  const heightUnits = answers[ELEMENT_IDS.HEIGHT_UNITS]?.toLowerCase();
-  const isImperial = heightUnits === 'imperial';
+  // Values from Adapty: "quiz_6_unit_ft_in" (imperial) or "quiz_6_unit_cm" (metric)
+  // Also check weight units: "quiz_2_unit_lb" (imperial) or "quiz_2_unit_kg" (metric)
+  const heightUnitsRaw = answers[ELEMENT_IDS.HEIGHT_UNITS] || '';
+  const weightUnitsRaw = answers[ELEMENT_IDS.WEIGHT_GOAL_UNITS] || '';
+  
+  // Check if imperial - look for "ft", "in", "lb" in the value
+  const usesImperialHeight = heightUnitsRaw.toLowerCase().includes('ft') || 
+                              heightUnitsRaw.toLowerCase().includes('in');
+  const usesImperialWeight = weightUnitsRaw.toLowerCase().includes('lb');
+  const isImperial = usesImperialHeight || usesImperialWeight;
+  
+  console.log('[Onboarding] Height units:', heightUnitsRaw, '→ imperial:', usesImperialHeight);
+  console.log('[Onboarding] Weight units:', weightUnitsRaw, '→ imperial:', usesImperialWeight);
+  console.log('[Onboarding] Final isImperial:', isImperial);
+  
+  // Save unit system preference
+  profileStore.setUnitSystem(isImperial ? 'imperial' : 'metric');
+  console.log('[Onboarding] Saved unit system:', isImperial ? 'imperial' : 'metric');
   
   // Current weight
   const currentWeightStr = answers[ELEMENT_IDS.CURRENT_WEIGHT];

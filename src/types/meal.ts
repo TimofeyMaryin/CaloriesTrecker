@@ -6,6 +6,7 @@ export interface Ingredient {
   proteins: number;
   carbs: number;
   fats: number;
+  excluded?: boolean;  // true if ingredient was excluded by user
 }
 
 // API Request
@@ -41,29 +42,41 @@ export interface MealRecord {
   health: number;
   ingredients: Ingredient[];
   totals: MealTotals;
+  servings: number;            // Number of servings (default 1)
   imageUri?: string;           // Local image URI for display
   createdAt: string;           // ISO date string
   date: string;                // YYYY-MM-DD for grouping by day
 }
 
-// Calculate totals from ingredients
-export function calculateTotals(ingredients: Ingredient[]): MealTotals {
-  return ingredients.reduce(
-    (acc, item) => ({
-      totalCalories: acc.totalCalories + item.calories,
-      totalProteins: acc.totalProteins + item.proteins,
-      totalCarbs: acc.totalCarbs + item.carbs,
-      totalFats: acc.totalFats + item.fats,
-      totalWeight: acc.totalWeight + item.weight,
-    }),
-    {
-      totalCalories: 0,
-      totalProteins: 0,
-      totalCarbs: 0,
-      totalFats: 0,
-      totalWeight: 0,
-    },
-  );
+// Calculate totals from ingredients (excludes ingredients marked as excluded)
+export function calculateTotals(ingredients: Ingredient[], servings: number = 1): MealTotals {
+  const base = ingredients
+    .filter((item) => !item.excluded)
+    .reduce(
+      (acc, item) => ({
+        totalCalories: acc.totalCalories + item.calories,
+        totalProteins: acc.totalProteins + item.proteins,
+        totalCarbs: acc.totalCarbs + item.carbs,
+        totalFats: acc.totalFats + item.fats,
+        totalWeight: acc.totalWeight + item.weight,
+      }),
+      {
+        totalCalories: 0,
+        totalProteins: 0,
+        totalCarbs: 0,
+        totalFats: 0,
+        totalWeight: 0,
+      },
+    );
+  
+  // Apply servings multiplier
+  return {
+    totalCalories: Math.round(base.totalCalories * servings),
+    totalProteins: Math.round(base.totalProteins * servings * 10) / 10,
+    totalCarbs: Math.round(base.totalCarbs * servings * 10) / 10,
+    totalFats: Math.round(base.totalFats * servings * 10) / 10,
+    totalWeight: Math.round(base.totalWeight * servings),
+  };
 }
 
 // Generate unique ID
